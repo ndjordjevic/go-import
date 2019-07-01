@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 )
@@ -112,20 +112,33 @@ func main() {
 		fmt.Println(err)
 	}
 
-	fmt.Println("Successfully Opened users.xml")
+	fmt.Println("Successfully Opened Accounts1K.xml")
 	defer func() {
 		if err := xmlFile.Close(); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
-	byteValue, _ := ioutil.ReadAll(xmlFile)
+	decoder := xml.NewDecoder(xmlFile)
+	for {
+		t, tokenErr := decoder.Token()
+		if tokenErr != nil {
+			if tokenErr == io.EOF {
+				break
+			}
 
-	var accounts Accounts
+			fmt.Println(tokenErr)
+		}
+		switch t := t.(type) {
+		case xml.StartElement:
+			if t.Name.Space == "http://www.front.com" && t.Name.Local == "Account" {
+				var account Account
+				if err := decoder.DecodeElement(&account, &t); err != nil {
+					fmt.Println(err)
+				}
 
-	if err := xml.Unmarshal(byteValue, &accounts); err != nil {
-		panic(err)
+				fmt.Println(account)
+			}
+		}
 	}
-
-	fmt.Println(accounts)
 }
