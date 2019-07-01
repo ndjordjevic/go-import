@@ -1,0 +1,4 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea/*
+.DS_Store
+/cmd/go_import/Accounts1K.zip
