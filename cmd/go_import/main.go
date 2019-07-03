@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 	"flag"
 	"fmt"
-	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/minus5/gofreetds"
 	"io"
 	"log"
 	"os"
@@ -134,22 +134,6 @@ func main() {
 		}
 	}()
 
-	//stmt, err := db.Prepare("select 1, 'abc'")
-	//if err != nil {
-	//	log.Fatal("Prepare failed:", err.Error())
-	//}
-	//defer stmt.Close()
-	//
-	//row := stmt.QueryRow()
-	//var somenumber int64
-	//var somechars string
-	//err = row.Scan(&somenumber, &somechars)
-	//if err != nil {
-	//	log.Fatal("Scan failed:", err.Error())
-	//}
-	//fmt.Printf("somenumber:%d\n", somenumber)
-	//fmt.Printf("somechars:%s\n", somechars)
-
 	xmlFile, err := os.Open("cmd/go_import/Accounts100K.xml")
 	if err != nil {
 		fmt.Println(err)
@@ -206,8 +190,6 @@ func main() {
 func processAccount(account *Account, tx *sql.Tx) {
 	dt := time.Now()
 
-	//var id int
-
 	_, err := tx.Exec("insert into dbo.Accounts (creation_time, modification_time, modification_type, user_id, trading_group_id, "+
 		"credit_limit, short_sell_limit, order_value_limit, high_risk_collateral_factor, derivative_limit, risk_multiplier, "+
 		"active, collateral_allowed, short_sell_allowed, credit_allowed, code, inactivation_comment, default_currency, "+
@@ -220,11 +202,5 @@ func processAccount(account *Account, tx *sql.Tx) {
 		panic(err)
 	}
 
-	//if err = tx.QueryRow("select ID = convert(bigint, SCOPE_IDENTITY())").Scan(&id); err != nil {
-	//	fmt.Println(err)
-	//	panic(err)
-	//}
-	//
 	//fmt.Println(result.LastInsertId())
-	//fmt.Println(id)
 }
