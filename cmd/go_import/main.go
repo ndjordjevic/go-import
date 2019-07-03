@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 	"flag"
 	"fmt"
-	_ "github.com/minus5/gofreetds"
+	_ "github.com/denisenkom/go-mssqldb"
 	"io"
 	"log"
 	"os"
