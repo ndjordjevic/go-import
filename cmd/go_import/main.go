@@ -116,45 +116,46 @@ var (
 	port     *int = flag.Int("port", 1433, "the database port")
 	server        = flag.String("server", "localhost", "the database server")
 	user          = flag.String("user", "sa", "the database user")
+	database      = flag.String("database", "SOFTBROKER", "the database")
 )
 
 func main() {
-	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d", *server, *user, *password, *port)
+	connString := fmt.Sprintf("server=%s;database=%s;user id=%s;password=%s;port=%d", *server, *database, *user, *password, *port)
 	if *debug {
 		fmt.Printf("connString:%s\n", connString)
 	}
-	conn, err := sql.Open("mssql", connString)
+	db, err := sql.Open("mssql", connString)
 	if err != nil {
-		log.Fatal("Open connection failed:", err.Error())
+		log.Fatal("Open db connection failed:", err.Error())
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
+		if err := db.Close(); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
-	stmt, err := conn.Prepare("select 1, 'abc'")
-	if err != nil {
-		log.Fatal("Prepare failed:", err.Error())
-	}
-	defer stmt.Close()
+	//stmt, err := db.Prepare("select 1, 'abc'")
+	//if err != nil {
+	//	log.Fatal("Prepare failed:", err.Error())
+	//}
+	//defer stmt.Close()
+	//
+	//row := stmt.QueryRow()
+	//var somenumber int64
+	//var somechars string
+	//err = row.Scan(&somenumber, &somechars)
+	//if err != nil {
+	//	log.Fatal("Scan failed:", err.Error())
+	//}
+	//fmt.Printf("somenumber:%d\n", somenumber)
+	//fmt.Printf("somechars:%s\n", somechars)
 
-	row := stmt.QueryRow()
-	var somenumber int64
-	var somechars string
-	err = row.Scan(&somenumber, &somechars)
-	if err != nil {
-		log.Fatal("Scan failed:", err.Error())
-	}
-	fmt.Printf("somenumber:%d\n", somenumber)
-	fmt.Printf("somechars:%s\n", somechars)
-
-	xmlFile, err := os.Open("cmd/go_import/Accounts1M.xml")
+	xmlFile, err := os.Open("cmd/go_import/Accounts100K.xml")
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Println("Successfully Opened Accounts1M.xml")
+	fmt.Println("Successfully Opened Accounts100K.xml")
 	defer func() {
 		if err := xmlFile.Close(); err != nil {
 			log.Fatal(err)
@@ -163,6 +164,14 @@ func main() {
 
 	decoder := xml.NewDecoder(xmlFile)
 	start := time.Now()
+
+	var tx *sql.Tx
+
+	if tx, err = db.Begin(); err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
 	for {
 		t, tokenErr := decoder.Token()
 		if tokenErr != nil {
@@ -180,11 +189,42 @@ func main() {
 					fmt.Println(err)
 				}
 
-				//fmt.Println(account)
+				processAccount(&account, tx)
 			}
 		}
 	}
 
+	if err = tx.Commit(); err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
 	elapsed := time.Since(start)
-	fmt.Printf("Parsing took %s", elapsed)
+	fmt.Printf("Parsing and inserting into DB took %s", elapsed)
+}
+
+func processAccount(account *Account, tx *sql.Tx) {
+	dt := time.Now()
+
+	//var id int
+
+	_, err := tx.Exec("insert into dbo.Accounts (creation_time, modification_time, modification_type, user_id, trading_group_id, "+
+		"credit_limit, short_sell_limit, order_value_limit, high_risk_collateral_factor, derivative_limit, risk_multiplier, "+
+		"active, collateral_allowed, short_sell_allowed, credit_allowed, code, inactivation_comment, default_currency, "+
+		"derivative_level, impersonate_cfd, gross_margin_calculation, cfd_account) "+
+		"values (?, ?, 'SYSTEM', NULL, NULL, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 0, 0, 0)",
+		dt, dt, account.CreditLimit, account.RiskMultiplier, account.Active, account.CollateralAllowed, account.ShortSellAllowed, account.CreditAllowed, account.Code, account.DefaultCurrency, account.DerivativeLevel)
+
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	//if err = tx.QueryRow("select ID = convert(bigint, SCOPE_IDENTITY())").Scan(&id); err != nil {
+	//	fmt.Println(err)
+	//	panic(err)
+	//}
+	//
+	//fmt.Println(result.LastInsertId())
+	//fmt.Println(id)
 }
