@@ -1,11 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/xml"
+	"flag"
 	"fmt"
+	_ "github.com/denisenkom/go-mssqldb"
 	"io"
 	"log"
 	"os"
+	"time"
 )
 
 type Accounts struct {
@@ -106,13 +110,51 @@ type PropertyValues struct {
 	PropertyValues []string `xml:"PropertyValue"`
 }
 
+var (
+	debug         = flag.Bool("debug", true, "enable debugging")
+	password      = flag.String("password", "yourStrong(!)Password", "the database password")
+	port     *int = flag.Int("port", 1433, "the database port")
+	server        = flag.String("server", "localhost", "the database server")
+	user          = flag.String("user", "sa", "the database user")
+)
+
 func main() {
-	xmlFile, err := os.Open("cmd/go_import/Accounts1K.xml")
+	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d", *server, *user, *password, *port)
+	if *debug {
+		fmt.Printf("connString:%s\n", connString)
+	}
+	conn, err := sql.Open("mssql", connString)
+	if err != nil {
+		log.Fatal("Open connection failed:", err.Error())
+	}
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	stmt, err := conn.Prepare("select 1, 'abc'")
+	if err != nil {
+		log.Fatal("Prepare failed:", err.Error())
+	}
+	defer stmt.Close()
+
+	row := stmt.QueryRow()
+	var somenumber int64
+	var somechars string
+	err = row.Scan(&somenumber, &somechars)
+	if err != nil {
+		log.Fatal("Scan failed:", err.Error())
+	}
+	fmt.Printf("somenumber:%d\n", somenumber)
+	fmt.Printf("somechars:%s\n", somechars)
+
+	xmlFile, err := os.Open("cmd/go_import/Accounts1M.xml")
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Println("Successfully Opened Accounts1K.xml")
+	fmt.Println("Successfully Opened Accounts1M.xml")
 	defer func() {
 		if err := xmlFile.Close(); err != nil {
 			log.Fatal(err)
@@ -120,6 +162,7 @@ func main() {
 	}()
 
 	decoder := xml.NewDecoder(xmlFile)
+	start := time.Now()
 	for {
 		t, tokenErr := decoder.Token()
 		if tokenErr != nil {
@@ -137,8 +180,11 @@ func main() {
 					fmt.Println(err)
 				}
 
-				fmt.Println(account)
+				//fmt.Println(account)
 			}
 		}
 	}
+
+	elapsed := time.Since(start)
+	fmt.Printf("Parsing took %s", elapsed)
 }
