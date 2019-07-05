@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -147,31 +148,26 @@ func main() {
 		}
 	}()
 
-	//ch := make(chan *Account)
+	ch := make(chan *Account)
 
-	//const noOfGoRoutines = 4
+	const noOfGoRoutines = 4
+	var wg sync.WaitGroup
+	wg.Add(100000)
 
-	//for g := 0; g < noOfGoRoutines; g++ {
-	//	go func(g int) {
-	//		for account := range ch {
-	//			fmt.Printf("Enter: %v\n", g)
-	//			processAccount(account, db)
-	//			fmt.Printf("Exit: %v\n", g)
-	//		}
-	//	}(g)
-	//}
+	for g := 0; g < noOfGoRoutines; g++ {
+		go func(g int) {
+			for account := range ch {
+				//fmt.Printf("Enter: %v\n", g)
+				processAccount(account, db)
+				//fmt.Printf("Exit: %v\n", g)
+				wg.Done()
+			}
+		}(g)
+	}
 
 	decoder := xml.NewDecoder(xmlFile)
 	start := time.Now()
 
-	//var tx *sql.Tx
-	//
-	//if tx, err = db.Begin(); err != nil {
-	//	fmt.Println(err)
-	//	panic(err)
-	//}
-
-	//var wg sync.WaitGroup
 	for {
 		t, tokenErr := decoder.Token()
 		if tokenErr != nil {
@@ -189,32 +185,27 @@ func main() {
 					fmt.Println(err)
 				}
 
-				//ch <- &account
+				ch <- &account
 				//wg.Add(1)
 				//go processAccount(&account, db, &wg)
-				processAccount(&account, db)
+				//processAccount(&account, db)
 
 			}
 		}
 	}
 
-	//close(ch)
+	close(ch)
 
-	//wg.Wait()
-
-	//if err = tx.Commit(); err != nil {
-	//	fmt.Println(err)
-	//	panic(err)
-	//}
+	wg.Wait()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Parsing and inserting into DB took %s", elapsed)
 }
 
-func processAccount(account *Account, tx *sql.DB) {
+func processAccount(account *Account, db *sql.DB) {
 	dt := time.Now()
 
-	_, err := tx.Exec("insert into dbo.Accounts (creation_time, modification_time, modification_type, user_id, trading_group_id, "+
+	_, err := db.Exec("insert into dbo.Accounts (creation_time, modification_time, modification_type, user_id, trading_group_id, "+
 		"credit_limit, short_sell_limit, order_value_limit, high_risk_collateral_factor, derivative_limit, risk_multiplier, "+
 		"active, collateral_allowed, short_sell_allowed, credit_allowed, code, inactivation_comment, default_currency, "+
 		"derivative_level, impersonate_cfd, gross_margin_calculation, cfd_account) "+
