@@ -164,7 +164,7 @@ func main() {
 }
 
 func processAccount(account *Account, db *sql.DB) {
-	dt := time.Now
+	dt := time.Now()
 
 	_, err := db.Exec("insert into dbo.Accounts (creation_time, modification_time, modification_type, user_id, trading_group_id, "+
 		"credit_limit, short_sell_limit, order_value_limit, high_risk_collateral_factor, derivative_limit, risk_multiplier, "+
