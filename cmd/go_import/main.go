@@ -186,10 +186,6 @@ func main() {
 				}
 
 				ch <- &account
-				//wg.Add(1)
-				//go processAccount(&account, db, &wg)
-				//processAccount(&account, db)
-
 			}
 		}
 	}
