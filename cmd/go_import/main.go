@@ -176,10 +176,10 @@ func main() {
 	fmt.Printf("Parsing and inserting into DB took %s", elapsed)
 }
 
-func processAccount(account *Account, tx *sql.DB) {
+func processAccount(account *Account, db *sql.DB) {
 	dt := time.Now()
 
-	_, err := tx.Exec("insert into dbo.Accounts (creation_time, modification_time, modification_type, user_id, trading_group_id, "+
+	_, err := db.Exec("insert into dbo.Accounts (creation_time, modification_time, modification_type, user_id, trading_group_id, "+
 		"credit_limit, short_sell_limit, order_value_limit, high_risk_collateral_factor, derivative_limit, risk_multiplier, "+
 		"active, collateral_allowed, short_sell_allowed, credit_allowed, code, inactivation_comment, default_currency, "+
 		"derivative_level, impersonate_cfd, gross_margin_calculation, cfd_account) "+
