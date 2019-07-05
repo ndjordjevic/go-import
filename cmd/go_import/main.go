@@ -124,6 +124,7 @@ func main() {
 	if *debug {
 		fmt.Printf("connString:%s\n", connString)
 	}
+
 	db, err := sql.Open("mssql", connString)
 	if err != nil {
 		log.Fatal("Open db connection failed:", err.Error())
@@ -149,13 +150,6 @@ func main() {
 	decoder := xml.NewDecoder(xmlFile)
 	start := time.Now()
 
-	var tx *sql.Tx
-
-	if tx, err = db.Begin(); err != nil {
-		fmt.Println(err)
-		panic(err)
-	}
-
 	for {
 		t, tokenErr := decoder.Token()
 		if tokenErr != nil {
@@ -173,34 +167,27 @@ func main() {
 					fmt.Println(err)
 				}
 
-				processAccount(&account, tx)
+				processAccount(&account, db)
 			}
 		}
-	}
-
-	if err = tx.Commit(); err != nil {
-		fmt.Println(err)
-		panic(err)
 	}
 
 	elapsed := time.Since(start)
 	fmt.Printf("Parsing and inserting into DB took %s", elapsed)
 }
 
-func processAccount(account *Account, tx *sql.Tx) {
+func processAccount(account *Account, tx *sql.DB) {
 	dt := time.Now()
 
 	_, err := tx.Exec("insert into dbo.Accounts (creation_time, modification_time, modification_type, user_id, trading_group_id, "+
 		"credit_limit, short_sell_limit, order_value_limit, high_risk_collateral_factor, derivative_limit, risk_multiplier, "+
 		"active, collateral_allowed, short_sell_allowed, credit_allowed, code, inactivation_comment, default_currency, "+
 		"derivative_level, impersonate_cfd, gross_margin_calculation, cfd_account) "+
-		"values (?, ?, 'SYSTEM', NULL, NULL, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 0, 0, 0)",
+		" output inserted.id  values (?, ?, 'SYSTEM', NULL, NULL, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 0, 0, 0)",
 		dt, dt, account.CreditLimit, account.RiskMultiplier, account.Active, account.CollateralAllowed, account.ShortSellAllowed, account.CreditAllowed, account.Code, account.DefaultCurrency, account.DerivativeLevel)
 
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
-
-	//fmt.Println(result.LastInsertId())
 }
