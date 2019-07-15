@@ -136,12 +136,12 @@ func main() {
 		}
 	}()
 
-	xmlFile, err := os.Open("cmd/go_import/Accounts1M.xml")
+	xmlFile, err := os.Open("cmd/go_import/Accounts100K.xml")
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Println("Successfully Opened Accounts1M.xml")
+	fmt.Println("Successfully Opened Accounts100K.xml")
 	defer func() {
 		if err := xmlFile.Close(); err != nil {
 			log.Fatal(err)
@@ -158,7 +158,7 @@ func main() {
 
 	const noOfGoRoutines = 4
 	var wg sync.WaitGroup
-	wg.Add(1000000)
+	wg.Add(100000)
 
 	for g := 0; g < noOfGoRoutines; g++ {
 		go func(g int) {
