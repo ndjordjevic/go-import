@@ -1,6 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
 .idea/*
 .DS_Store
-/cmd/go_import/Accounts1K.zip
+/cmd/go_import/Accounts1K.xml
 /cmd/go_import/Accounts1M.xml
 /cmd/go_import/Accounts100k.xml
