@@ -147,7 +147,7 @@ func main() {
 		}
 	}()
 
-	ch := make(chan *Account)
+	ch := make(chan Account)
 
 	stmt, err := db.Prepare("insert into dbo.Accounts (creation_time, modification_time, modification_type, user_id, trading_group_id, " +
 		"credit_limit, short_sell_limit, order_value_limit, high_risk_collateral_factor, derivative_limit, risk_multiplier, " +
@@ -155,7 +155,7 @@ func main() {
 		"derivative_level, impersonate_cfd, gross_margin_calculation, cfd_account) " +
 		" output inserted.id  values (?, ?, 'SYSTEM', NULL, NULL, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 0, 0, 0)")
 
-	const noOfGoRoutines = 1
+	const noOfGoRoutines = 48
 	var wg sync.WaitGroup
 	wg.Add(100000)
 
@@ -163,7 +163,8 @@ func main() {
 		go func(g int) {
 			for account := range ch {
 				//fmt.Printf("Enter: %v\n", g)
-				processAccount(account, stmt)
+				//println("Read from a channel code:", account.Code, "address:", &account)
+				processAccount(&account, stmt)
 				//fmt.Printf("Exit: %v\n", g)
 				wg.Done()
 			}
@@ -181,7 +182,8 @@ func main() {
 
 	for _, a := range accounts.Accounts {
 		//processAccount(&a, db)
-		ch <- &a
+		//println(a.Code)
+		ch <- a
 	}
 
 	wg.Wait()
@@ -192,6 +194,8 @@ func main() {
 
 func processAccount(account *Account, stmt *sql.Stmt) {
 	dt := time.Now()
+
+	//println("Writing to db code: ", account.Code)
 
 	_, err := stmt.Exec(dt, dt, account.CreditLimit, account.RiskMultiplier, account.Active, account.CollateralAllowed, account.ShortSellAllowed, account.CreditAllowed, account.Code, account.DefaultCurrency, account.DerivativeLevel)
 
