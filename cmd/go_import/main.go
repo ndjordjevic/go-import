@@ -155,7 +155,7 @@ func main() {
 		"derivative_level, impersonate_cfd, gross_margin_calculation, cfd_account) " +
 		" output inserted.id  values (?, ?, 'SYSTEM', NULL, NULL, ?, 0, 0, 0, 0, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 0, 0, 0)")
 
-	const noOfGoRoutines = 48
+	const noOfGoRoutines = 64
 	var wg sync.WaitGroup
 	wg.Add(100000)
 
