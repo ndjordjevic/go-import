@@ -147,7 +147,7 @@ func main() {
 		}
 	}()
 
-	ch := make(chan Account)
+	ch := make(chan *Account)
 
 	stmt, err := db.Prepare("insert into dbo.Accounts (creation_time, modification_time, modification_type, user_id, trading_group_id, " +
 		"credit_limit, short_sell_limit, order_value_limit, high_risk_collateral_factor, derivative_limit, risk_multiplier, " +
@@ -164,7 +164,7 @@ func main() {
 			for account := range ch {
 				//fmt.Printf("Enter: %v\n", g)
 				//println("Read from a channel code:", account.Code, "address:", &account)
-				processAccount(&account, stmt)
+				processAccount(account, stmt)
 				//fmt.Printf("Exit: %v\n", g)
 				wg.Done()
 			}
@@ -180,10 +180,10 @@ func main() {
 		panic(err)
 	}
 
-	for _, a := range accounts.Accounts {
+	for i, _ := range accounts.Accounts {
 		//processAccount(&a, db)
 		//println(a.Code)
-		ch <- a
+		ch <- &accounts.Accounts[i]
 	}
 
 	wg.Wait()

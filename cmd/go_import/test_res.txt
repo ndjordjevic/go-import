@@ -1,0 +1,53 @@
+Read the whole file in memory then insert and commit after every account
+4m21s
+4m18s
+
+Sequential read and insert and commit after every account
+4m37s
+4m33s
+4m32s
+4m25s
+
+Sequential read, concurrent DB insert, commit after each account, 2 go routines
+2m19s
+2m18s
+
+Sequential read, concurrent DB insert, commit after each account, 4 go routines
+2m10s
+2m14s
+2m12s
+
+Sequential read, concurrent DB insert, commit after each account, 8 go routines
+2m15s
+2m16s
+
+Sequential read, concurrent DB insert, commit after each account, 4 go routines, stmt
+2m12s
+2m13s
+
+Read all, concurrent write, 1 go routine
+4m25s
+4m28a
+
+Read all, concurrent write, 2 go routine
+2m31s
+2m32s
+
+Read all, concurrent write, 4 go routine
+2m7s
+2m5s
+
+Read all, concurrent write, 8 go routine
+1m45s
+1m42s
+
+Read all, concurrent write, 16 go routine
+1m27s
+1m29s
+
+Read all, concurrent write, 32 go routine
+1m28s
+
+Read all, concurrent write, 64 go routine
+1m25s
+1m22s
